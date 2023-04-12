@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Homepage</title>
+    <script>
+        function check_login_status(){
+            $.ajax({
+                 cache:"false",
+                 async:"true",
+                 url: "http://127.0.0.1:8000/mainpage/check_action_status/",
+                 type:'POST',
+                 datatype:'json',
+                 contentType:'application/json',
+                 data: {
+                     'token' : getCookie('token')
+                 },
+                 success:
+                     function(data) {
+                        console.log(data.status)
+                         document.getElementById("messege").innerText = data.status
+                         if (getCookie('status') === 'todo') {
+                             document.getElementById("messege").innerText = "Confirm on you phone!"
+                             setCookie('status', data.status)
+                             setCookie('messege', data.status)
+                         }
+
+                        if (data.status === 'fail') {
+                            document.getElementById("messege").innerText = "Fail to change!"
+                        }
+                        if (data.status === 'noaction'){
+                            document.getElementById("messege").innerText = ""
+                        }
+
+                     },
+                 error:
+                    function (){
+                        console.log('no')
+                    }
+             })
+        }
+        function getCookie(name){
+            var arr = document.cookie.match(new RegExp("(^| )"+name+"=([^;]*)(;|$)"));
+            if(arr != null) return unescape(arr[2]); return null;
+        }
+        function setCookie(key,value){
+            document.cookie=key + '=' + encodeURIComponent(value);
+        }
+        function send_change_request(){
+            var new_description = document.getElementById("textarea").value;
+            setCookie('new_description', new_description)
+            $.ajax({
+                 async:"true",
+                 url: "http://127.0.0.1:8000/watch/chang_user_description/",
+                 type:'POST',
+                 datatype:'json',
+                 contentType:'application/json',
+                 data: {
+                     'new_description' : new_description,
+                 },
+                 success:
+                 function (data){
+                    console.log(data)
+                 }
+
+            })
+        }
+        window.setInterval('check_login_status()',500);
+    </script>
+    <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+	<script src="https://cdn.staticfile.org/jquery/2.1.1/jquery.min.js"></script>
+	<script src="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+</head>
+<body>
+{% block content %}
+<h1>Auth Test watch Home</h1>
+
+<h2>User Info</h2>
+<form method="post" enctype="multipart/form-data">
+ <ul>
+    <li><strong>Username:</strong> {{ username }}</li>
+    <li><strong>Email:</strong> {{ email }}</li>
+   <li><strong>User description:</strong></li>
+
+    <textarea rows="10" cols="30" name="new_description" id="textarea">
+{{ user_description }}
+    </textarea>
+
+     </ul>
+<p id="messege"></p>
+</form>
+<button onclick="send_change_request()">
+      change user description
+  </button>
+    <form method="post" action="{% url 'watchQRcodelogin'%}">
+        <button type="submit">
+        Log out
+        </button>
+    </form>
+
+
+{% endblock %}
+</body>
+</html>
